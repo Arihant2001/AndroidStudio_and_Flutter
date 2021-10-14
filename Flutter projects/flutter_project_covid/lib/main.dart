@@ -1,37 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_project_covid/app/repositories/data_repository.dart';
+import 'package:flutter_project_covid/app/services/api_service.dart';
+import 'package:flutter_project_covid/app/services/api.dart';
+import 'package:flutter_project_covid/app/services/data_cache_services.dart';
+import 'package:flutter_project_covid/app/ui/dashboard.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Intl.defaultLocale = 'en_IN';
+  await initializeDateFormatting();
+  final sharedPreferences = await SharedPreferences
+      .getInstance(); // get value asyncronously in void main() and make it available syncronously to rest of the app
+  runApp(MyApp(
+    sharedPreferences: sharedPreferences,
+  ));
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key key, @required this.sharedPreferences}) : super(key: key);
+  final SharedPreferences sharedPreferences;
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-        // This makes the visual density adapt to the platform that you run
-        // the app on. For desktop platforms, the controls will be smaller and
-        // closer together (more dense) than on mobile platforms.
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return Provider<DataRepository>(
+      create: (_) => DataRepository(
+          apiService: APIService(API.sandbox()),
+          dataCacheService: DataCacheService(
+            sharedPreferences: sharedPreferences,
+          )),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Coronavirus Tracker',
+        theme: ThemeData.dark().copyWith(
+          scaffoldBackgroundColor: Color(0xFF101010),
+          cardColor: Color(0xFF222222),
+        ),
+        home: Dashboard(),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+/*class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
@@ -50,16 +64,25 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String _accessToken = '';
+  int _cases;
+  int _deaths;
 
-  void _incrementCounter() {
+  void _updateAccessToken() async {
+    final apiService = APIService(API.sandbox());
+    final accessToken = await apiService.getAccessToken();
+    final cases = await apiService.getEndpointData(
+      accessToken: accessToken,
+      endpoint: Endpoint.cases,
+    );
+    final deaths = await apiService.getEndpointData(
+      accessToken: accessToken,
+      endpoint: Endpoint.deaths,
+    );
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _accessToken = accessToken;
+      _cases = cases;
+      _deaths = deaths;
     });
   }
 
@@ -101,17 +124,27 @@ class _MyHomePageState extends State<MyHomePage> {
               'You have pushed the button this many times:',
             ),
             Text(
-              '$_counter',
+              '$_accessToken',
               style: Theme.of(context).textTheme.headline4,
             ),
+            if (_cases != null)
+              Text(
+                'cases: $_cases',
+                style: Theme.of(context).textTheme.headline4,
+              ),
+            if (_deaths != null)
+              Text(
+                'deaths: $_deaths',
+                style: Theme.of(context).textTheme.headline4,
+              ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _updateAccessToken,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
-}
+}*/

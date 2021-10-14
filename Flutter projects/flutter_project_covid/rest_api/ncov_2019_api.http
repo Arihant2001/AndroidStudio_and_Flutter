@@ -1,5 +1,29 @@
-@baseUrl=https://ncov2019-admin.firebaseapp.com
-@authorization = 0bfee127bc1c51ca5864e2e83ad94368e837df583d7bbab2b0222b45e7930f80
-# used to get an access token given an authorisation key
+ # used to get an access token given an authorisation key
 POST {{baseUrl}}/token
 Authorization: Basic {{authorization}}
+
+###
+
+GET {{baseUrl}}/cases
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+###
+
+GET {{baseUrl}}/casesSuspected
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+###
+
+GET {{baseUrl}}/casesConfirmed
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+###
+
+GET {{baseUrl}}/deaths
+Accept: application/json
+Authorization: Bearer {{accessToken}}
+###
+
+GET {{baseUrl}}/recovered
+Accept: application/json
+Authorization: Bearer {{accessToken}}
